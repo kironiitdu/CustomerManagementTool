@@ -1,0 +1,198 @@
+﻿@model Customer
+<div class="container">
+    <h1>Customer Details</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <ul class="list-group">
+                <li class="list-group-item">ID: @Model.Id</li>
+                <li class="list-group-item">Name: @Model.FirstName @Model.LastName</li>
+                <li class="list-group-item">Birthday: @Model.Birthday.ToString("yyyy-MM-dd")</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Contacts</h2>
+
+    <div class="row">
+        <div class="col-md-12">
+            <button type="button" class="btn btn-primary" id="addContactBtn">Add Contact</button>
+        </div>
+    </div>
+
+    <div id="contactsSection">
+        <table class="table" id="contactsTable">
+            <thead>
+                <tr>
+                    <th>Contact Type</th>
+                    <th>Contact Value</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var contact in Model.Contacts)
+                {
+                    <tr id="contact-@contact.Id">
+                        <td>@contact.Id</td>
+                        <td>@contact.Type.ToString()</td>
+                        <td>@contact.Value</td>
+                        <td>
+                            <button type="button" class="btn btn-info btn-sm editContactBtn" data-contact-id="@contact.Id">Edit</button>
+                            <button type="button" class="btn btn-danger btn-sm deleteContactBtn" data-contact-id="@contact.Id">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Tasks</h2>
+
+    <!-- Task section -->
+</div>
+
+<!-- Contact Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalLabel">Contact Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm">
+                    <input type="hidden" id="contactId" name="contactId" />
+                    <div class="form-group">
+                        <label for="contactType">Type</label>
+                        <select class="form-control" id="contactType" name="contactType" required>
+                            <option value="">Select Type</option>
+                            <option value="Phone">Phone</option>
+                            <option value="Mail">Mail</option>
+                            <option value="Web">Web</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactValue">Value</label>
+                        <input type="text" class="form-control" id="contactValue" name="contactValue" required />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveContactBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            // Add Contact Button Click
+            $('#addContactBtn').click(function () {
+                $('#contactModal').modal('show');
+                $('#contactId').val('');
+                $('#contactType').val('');
+                $('#contactValue').val('');
+            });
+
+            // Edit Contact Button Click
+            $(document).on('click', '.editContactBtn', function () {
+                var contactId = $(this).data('contact-id');
+                var contactType = $('#contact-' + contactId).find('.contact-type').text().trim();
+                var contactValue = $('#contact-' + contactId).find('.contact-value').text().trim();
+
+                $('#contactId').val(contactId);
+                $('#contactType').val(contactType);
+                $('#contactValue').val(contactValue);
+                $('#contactModal').modal('show');
+            });
+
+            // Save Contact Button Click
+            $('#saveContactBtn').click(function () {
+                var contactId = $('#contactId').val();
+                var customerId = '@Model.Id';
+                var contactType = $('#contactType').val();
+                var contactValue = $('#contactValue').val();
+
+                var url = contactId ? '/Contact/Edit' : '/Contact/Add';
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        customerId: customerId,
+                        contactId: contactId,
+                        type: contactType,
+                        value: contactValue
+                    },
+                    success: function (data) {
+                        $('#contactModal').modal('hide');
+                        // Clear existing table rows
+                        location.reload();
+                        // Append new table rows
+                        fetchContacts(customerId);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            });
+
+            // Delete Contact Button Click
+            $('.deleteContactBtn').click(function () {
+                var contactId = $(this).data('contact-id');
+                var customerId = '@Model.Id';
+
+                if (confirm('Are you sure you want to delete this contact?')) {
+                    $.ajax({
+                        url: '/Contact/DeleteContact',
+                        type: 'POST',
+                        data: {
+                            customerId: customerId,
+                            contactId: contactId
+                        },
+                        success: function () {
+                            // Remove the contact row from the table
+                            location.reload();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error(error);
+                        }
+                    });
+                }
+            });
+
+
+
+            function fetchContacts(customerId) {
+                $.ajax({
+                    url: '/Contact/GetContactsByCustomerId',
+                    type: 'GET',
+                    data: { customerId: customerId },
+                    success: function (data) {
+                        $('#contactsTable tbody').empty();
+                        $.each(data, function (index, contact) {
+                            console.log(contact);
+                            var newRow = $('<tr id="contact-' + contact.Id + '">').append(
+                                $('<td>').text(contact.type),
+                                $('<td>').text(contact.value),
+                                $('<td>').append(
+                                    $('<button type="button" class="btn btn-info btn-sm editContactBtn">').attr('data-contact-id', contact.Id).text('Edit'),
+                                    $('<button type="button" class="btn btn-danger btn-sm deleteContactBtn">').attr('data-contact-id', contact.Id).text('Delete')
+                                )
+                            );
+                            $('#contactsTable tbody').append(newRow);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            }
+        });
+
+
+    </script>
+}

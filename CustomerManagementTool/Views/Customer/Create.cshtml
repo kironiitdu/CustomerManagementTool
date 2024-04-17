@@ -1,0 +1,52 @@
+﻿@model Customer
+
+@{
+    ViewData["Title"] = "Add Customer";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <h2>Add Customer</h2>
+    <form id="addCustomerForm">
+        <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" class="form-control" id="firstName" name="firstName" required>
+        </div>
+        <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" class="form-control" id="lastName" name="lastName" required>
+        </div>
+        <div class="form-group">
+            <label for="birthday">Birthday</label>
+            <input type="date" class="form-control" id="birthday" name="birthday" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $('#addCustomerForm').submit(function (e) {
+                e.preventDefault();
+                var formData = $(this).serialize();
+                addCustomer(formData);
+            });
+        });
+
+        function addCustomer(formData) {
+            $.ajax({
+                url: '@Url.Action("Create", "Customer")',
+                type: 'POST',
+                data: formData,
+                success: function (data) {
+                    //Redirecting to the index page if the post request get succceded
+                    window.location.href = '@Url.Action("Index", "Customer")';
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    alert("Error adding customer. Please try again.");
+                }
+            });
+        }
+    </script>
+}

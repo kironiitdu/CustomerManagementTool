@@ -1,0 +1,172 @@
+﻿@{
+    ViewData["Title"] = "Customer List";
+}
+
+<div class="container">
+    <h2>Customer List</h2>
+    <!-- Add New Customer -->
+    <div class="mb-3">
+        <button class="btn btn-success" type="button" asp-action="Create" asp-controller="Customer">Add Customer</button>
+        <button class="btn btn-secondary" style="padding-left:2px" type="button" id="AddBulkCustomers">Add Bulk Customer</button>
+        <button class="btn btn-danger"  style="padding-left:2px" type="button" id="deleteCustomers">Delete All Customer</button>
+    </div>
+    <div class="mb-3">
+       
+    </div>
+    <!-- Search input -->
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search by First or Last Name">
+        <button class="btn btn-primary" style="padding-left:10px" type="button" id="searchButton">Search</button>
+    </div>
+    <!-- Main Table -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Birthday</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody id="customerList">
+            <!--Fetching the customer list and will bind here-->
+        </tbody>
+    </table>
+    <!-- Pagination -->
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center" id="pagination">
+            <li class="page-item disabled" id="first"><a class="page-link" href="#">First</a></li>
+            <li class="page-item disabled" id="previous"><a class="page-link" href="#">Previous</a></li>
+            <li class="page-item disabled" id="next"><a class="page-link" href="#">Next</a></li>
+            <li class="page-item disabled" id="last"><a class="page-link" href="#">Last</a></li>
+        </ul>
+    </nav>
+</div>
+
+
+    @section scripts {
+    <script>
+        $(document).ready(function () {
+            loadCustomers(1, ''); // Loading first page initially with no search key    
+        });
+        //Search key
+        $('#searchButton').click(function () {
+            var searchKey = $('#searchInput').val();
+            loadCustomers(1, searchKey);
+        });
+
+        //Add Bulk customer
+
+        $('#AddBulkCustomers').click(function () {
+            alert("Click");
+            $.ajax({
+                url: '@Url.Action("AddBulkCustomers", "Customer")',
+                type: 'GET',
+                success: function (data) {
+                    alert(data);
+                    //After adding just load the page agian
+                    loadCustomers(1, '');
+                }
+            });
+        });
+
+        function loadCustomers(page, searchKey) {
+            $.ajax({
+                url: '@Url.Action("GetCustomer", "Customer")',
+                type: 'GET',
+                data: { page: page, pageSize: 10, searchKey: searchKey }, // Sending search key with other param
+                success: function (data) {
+                    console.log(data);
+                    renderCustomers(data.customers);
+                    renderPagination(data.totalCount);
+                }
+            });
+        }
+
+        function renderCustomers(data) {
+            var html = '';
+
+            for (var i = 0; i < data.length; i++) {
+                html += '<tr>';
+                html += '<td>' + data[i].id + '</td>';
+                html += '<td>' + data[i].firstName + '</td>';
+                html += '<td>' + data[i].lastName + '</td>';
+                html += '<td>' + data[i].birthday + '</td>';
+                html += '<td>';
+                html += '<button class="btn btn-primary btn-sm details-btn" data-customer-id="' + data[i].id + '">Details</button>';
+                html += '</td>';
+                html += '</tr>';
+            }
+            $('#customerList').html(html);
+           
+        }
+
+        // function renderPagination(totalItems) {
+        //     var totalPages = Math.ceil(totalItems / 10); // Calculate total pages
+        //     var paginationHtml = '';
+        //     for (var i = 1; i <= totalPages; i++) {
+        //         paginationHtml += '<li class="page-item"><a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>';
+        //     }
+        //     $('#pagination').html(paginationHtml);
+        // }
+
+
+        function renderPagination(totalPages, currentPage = 1) {
+            var paginationHtml = '';
+
+            // Handle edge cases:
+            if (totalPages <= 1) {
+                // Disable all buttons if only one page
+                $('#first, #previous, #next, #last').addClass('disabled');
+                return;
+            }
+
+            // Update buttons based on current page:
+            $('#first, #previous').addClass('disabled');
+            $('#next, #last').addClass('disabled');
+            if (currentPage > 1) {
+                $('#previous').removeClass('disabled');
+            }
+            if (currentPage < totalPages) {
+                $('#next').removeClass('disabled');
+            }
+
+           
+            // Render page numbers (excluding edge cases):
+            for (var i = Math.max(2, currentPage - 2); i <= Math.min(totalPages - 1, currentPage + 2); i++) {
+                var activeClass = (i === currentPage) ? 'active' : ''; // Add active class for current page
+                paginationHtml += '<li class="page-item ' + activeClass + '"><a class="page-link" href="#" data-page="' + i + '">' + i + '</a></li>';
+            }
+
+            // Prepend First, Previous, and append Next, Last:
+
+            paginationHtml = `
+                    <li class="page-item" id="first"><a class="page-link" href="#" data-page="${currentPage}">First</a></li>
+                    <li class="page-item" id="previous"><a class="page-link" href="#" data-page="${currentPage - 2}">Previous</a></li>
+            ` + paginationHtml + `
+            <li class="page-item" id="next"><a class="page-link" href="#" data-page="${currentPage + 2}">Next</a></li>
+            <li class="page-item" id="last"><a class="page-link" href="#">Last</a></li>
+          `;
+
+            $('#pagination').html(paginationHtml);
+        }
+
+        $(document).on('click', '.pagination a', function (e) {
+            e.preventDefault();
+            var clickedPage = $(this).attr('data-page'); // Get the clicked page number
+            alert(clickedPage);
+            var searchKey = $('#searchInput').val(); // Maintain search term for consistent results
+            loadCustomers(clickedPage, searchKey); // Pass the clicked page number
+        });
+
+        // View Details
+        $(document).on('click', '.details-btn', function (e) {
+            e.preventDefault();
+            var customerId = $(this).data('customerId');
+            window.open(`/Customer/Details/${customerId}`, '_blank');
+        });
+        
+    </script>
+
+    }
