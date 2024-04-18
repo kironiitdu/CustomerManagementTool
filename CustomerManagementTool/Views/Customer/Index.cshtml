@@ -6,7 +6,7 @@
     <h2>Customer List</h2>
     <!-- Add New Customer -->
     <div class="mb-3">
-        <button class="btn btn-success" type="button" asp-action="Create" asp-controller="Customer">Add Customer</button>
+       <button class="btn btn-success" id="AddNewCustomer">Add Customer</button>
         <button class="btn btn-secondary" style="padding-left:2px" type="button" id="AddBulkCustomers">Add Bulk Customer</button>
         <button class="btn btn-danger"  style="padding-left:2px" type="button" id="deleteCustomers">Delete All Customer</button>
     </div>
@@ -154,7 +154,7 @@
 
         $(document).on('click', '.pagination a', function (e) {
             e.preventDefault();
-            var clickedPage = $(this).attr('data-page'); // Get the clicked page number
+            var clickedPage = $(this).attr('data-page'); // Gettting the clicked page number
             alert(clickedPage);
             var searchKey = $('#searchInput').val(); // Maintain search term for consistent results
             loadCustomers(clickedPage, searchKey); // Pass the clicked page number
@@ -165,6 +165,11 @@
             e.preventDefault();
             var customerId = $(this).data('customerId');
             window.open(`/Customer/Details/${customerId}`, '_blank');
+        });
+        //Add New Customer
+        $(document).on('click', '#AddNewCustomer', function (e) {
+            e.preventDefault();
+            window.open(`/Customer/Create`, '_blank');
         });
         
     </script>

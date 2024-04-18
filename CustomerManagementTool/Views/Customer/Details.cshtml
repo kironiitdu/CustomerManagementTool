@@ -24,6 +24,7 @@
         <table class="table" id="contactsTable">
             <thead>
                 <tr>
+                    <th>Contact Id</th>
                     <th>Contact Type</th>
                     <th>Contact Value</th>
                     <th>Action</th>
@@ -34,8 +35,8 @@
                 {
                     <tr id="contact-@contact.Id">
                         <td>@contact.Id</td>
-                        <td>@contact.Type.ToString()</td>
-                        <td>@contact.Value</td>
+                        <td id="contactType">@contact.Type.ToString()</td>
+                        <td id ="contactValue">@contact.Value</td>
                         <td>
                             <button type="button" class="btn btn-info btn-sm editContactBtn" data-contact-id="@contact.Id">Edit</button>
                             <button type="button" class="btn btn-danger btn-sm deleteContactBtn" data-contact-id="@contact.Id">Delete</button>
@@ -100,12 +101,13 @@
             // Edit Contact Button Click
             $(document).on('click', '.editContactBtn', function () {
                 var contactId = $(this).data('contact-id');
-                var contactType = $('#contact-' + contactId).find('.contact-type').text().trim();
-                var contactValue = $('#contact-' + contactId).find('.contact-value').text().trim();
-
+                var contactType = $('#contact-' + contactId).find('#contactType').text().trim();
+                var contactValue = $('#contact-' + contactId).find('#contactValue').text().trim();
+                // Setting the existing values in the modal input fields
                 $('#contactId').val(contactId);
                 $('#contactType').val(contactType);
                 $('#contactValue').val(contactValue);
+
                 $('#contactModal').modal('show');
             });
 
@@ -164,7 +166,15 @@
                 }
             });
 
+            //Open close modal
+            $('.modal-header .close').click(function () {
+                $('#contactModal').modal('hide');
+            });
 
+            
+            $('#contactModal .modal-footer .btn-secondary').click(function () {
+                $('#contactModal').modal('hide');
+            });
 
             function fetchContacts(customerId) {
                 $.ajax({

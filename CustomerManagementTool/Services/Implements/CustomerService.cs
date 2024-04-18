@@ -60,7 +60,7 @@ namespace CustomerManagementTool.Services.Implements
             var totalCount = await _context.Customers.CountAsync();
 
             var customers = await _context.Customers
-                .Where(c => c.FirstName.Contains(searchKey) || c.LastName.Contains(searchKey))
+                .Where(c => c.FirstName!.Contains(searchKey) || c.LastName!.Contains(searchKey))
                 .Select(c => new CustomerViewModel
                 {
                     Id = c.Id,
