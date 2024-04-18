@@ -20,6 +20,7 @@ builder.Services.AddControllersWithViews();
  */
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<ICustomerTaskService, CustomerTaskService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

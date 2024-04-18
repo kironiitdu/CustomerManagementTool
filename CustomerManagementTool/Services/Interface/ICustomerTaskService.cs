@@ -4,10 +4,11 @@ namespace CustomerManagementTool.Services.Interface
 {
     public interface ICustomerTaskService
     {
-        void AddTask(int customerId, TaskModel task);
+        Task<bool> AddTask(int customerId, TaskModel task);
 
-        void UpdateTask(int customerId, int taskId, TaskModel task);
+        Task<bool> UpdateTask(int customerId, int taskId, TaskModel task);
 
-        void DeleteTask(int customerId, int taskId);
+        Task<bool> DeleteTask(int customerId, int taskId);
+        Task<List<TaskModel>> GetTasksByCustomerId(int customerId);
     }
 }

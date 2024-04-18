@@ -50,6 +50,56 @@
     <h2>Tasks</h2>
 
     <!-- Task section -->
+
+    <button id="addTaskBtn" class="btn btn-primary">Add New Task</button>
+
+    <!-- Task list table -->
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Creation Date</th>
+                <th>Solved</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="taskListContainer">
+            <!-- Task list will be loaded dynamically here -->
+        </tbody>
+    </table>
+
+    <!-- Modal for Add/Edit Task -->
+        <div class="modal fade" id="taskModal" tabindex="-1" role="dialog" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Task Details</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <input type="hidden" id="taskId" name="Id">
+                        <div class="form-group">
+                            <label for="taskDescription">Description:</label>
+                            <input type="text" class="form-control" id="taskDescription" name="Description">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskCreationDate">Creation Date:</label>
+                            <input type="date" class="form-control" id="taskCreationDate" name="CreationDate">
+                        </div>
+                        <div class="form-group form-check">
+                            <input type="checkbox" class="form-check-input" id="taskSolved" name="Solved">
+                            <label class="form-check-label" for="taskSolved">Solved</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveTaskBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Contact Modal -->
@@ -201,6 +251,163 @@
                     }
                 });
             }
+
+            //Task Section Code
+
+            function loadTaskList() {
+                var customerId = '@Model.Id';
+
+                fetch('/Task/GetTasksByCustomerId?customerId=' + customerId)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch task list');
+                        }
+                        return response.json();
+                    })
+                    .then(tasks => {
+                        // Clear previous content
+                        var taskListContainer = document.getElementById('taskListContainer');
+                        taskListContainer.innerHTML = '';
+
+                        // Create HTML for each task and append it to the container
+                        tasks.forEach(function (task) {
+                            var taskItem = document.createElement('tr');
+                            taskItem.innerHTML = '<td>' + task.description + '</td>' +
+                                '<td>' + task.creationDate + '</td>' +
+                                '<td>' + (task.solved ? 'Yes' : 'No') + '</td>' +
+                                '<td>' +
+                                '<button type="button" class="btn btn-sm btn-primary mr-1" onclick="openTaskModal(' + task.Id + ')">Edit</button>' +
+                                '<button style="margin-left:5px" type="button" class="btn btn-sm btn-danger" onclick="deleteTask(' + task.Id + ')">Delete</button>' +
+                                '</td>';
+                            taskListContainer.appendChild(taskItem);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to fetch task list. Please try again.');
+                    });
+            }
+
+            // Function to open modal for adding/editing task
+            function openTaskModal(taskId) {
+
+                alert("Click");
+                var modal = document.getElementById('taskModal');
+                modal.style.display = 'block';
+
+                // Populate form fields with task data
+                var task = { Id: '', Description: '', CreationDate: '', Solved: false }; // Initialize empty task
+                if (taskId) {
+                    // Here, you would use AJAX to fetch task details from the server
+                    // For demonstration purpose, let's create some mock data
+                    task = {
+                        Id: taskId,
+                        Description: "Task " + taskId,
+                        CreationDate: "2024-04-" + taskId,
+                        Solved: taskId % 2 === 0 // Even IDs are considered solved
+                    };
+                }
+                document.getElementById('taskId').value = task.Id;
+                document.getElementById('taskDescription').value = task.Description;
+                document.getElementById('taskCreationDate').value = task.CreationDate;
+                document.getElementById('taskSolved').checked = task.Solved;
+            }
+
+            // Function to close modal
+            $('#taskModal').on('hide.bs.modal', function () {
+                $('#taskForm')[0].reset(); // Reset form fields
+            });
+
+            // Function to submit add/edit task form
+            $('#taskForm').submit(function (event) {
+                event.preventDefault();
+
+                // Here, you would use AJAX to submit the form data to the server
+                // For demonstration purpose, let's log the form data to the console
+                var formData = {
+                    Id: $('#taskId').val(),
+                    Description: $('#taskDescription').val(),
+                    CreationDate: $('#taskCreationDate').val(),
+                    Solved: $('#taskSolved').is(':checked')
+                };
+                console.log(formData);
+
+                // Close modal
+                $('#taskModal').modal('hide');
+
+                // Reload task list
+                loadTaskList();
+            });
+
+            // Function to delete task
+            function deleteTask(taskId) {
+                if (confirm('Are you sure you want to delete this task?')) {
+                    // Here, you would use AJAX to delete the task from the server
+                    // For demonstration purpose, let's log the task ID to the console
+                    console.log('Deleting task with ID: ' + taskId);
+
+                    // Reload task list
+                    loadTaskList();
+                }
+            }
+            //Add task Modal
+            $('#addTaskBtn').click(function () {
+                $('#taskModal').modal('show');
+                $('#contactId').val('');
+                $('#contactType').val('');
+                $('#contactValue').val('');
+            });
+
+            //Open close modal
+            $('.modal-header .close').click(function () {
+                $('#taskModal').modal('hide');
+            });
+
+
+            $('#taskModal .modal-footer .btn-secondary').click(function () {
+                $('#taskModal').modal('hide');
+            });
+            // Load task list on page load
+
+            // Save Task Button Click
+            $('#saveTaskBtn').click(function () {
+                alert("saveTaskBtn");
+                var description = $('#taskDescription').val();
+                var creationDate = $('#taskCreationDate').val();
+                var solved = $('#taskSolved').is(':checked');
+                var customerId = '@Model.Id';
+              
+                var data = {
+                    customerId: customerId,
+                    Description: description,
+                    CreationDate: creationDate,
+                    Solved: solved
+                };
+
+                $.ajax({
+                    url: '/Task/AddTask',
+                    type: 'POST',
+                    data: {
+                        customerId: customerId,
+                        Description: description,
+                        CreationDate: creationDate,
+                        Solved: solved
+                    },
+                    success: function (data) {
+                        alert("Success");
+                        $('#taskModal').modal('hide');
+                        // Clear existing table rows
+                        location.reload();
+                        // Append new table rows
+                        loadTaskList();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            });
+
+            loadTaskList();
         });
 
 
