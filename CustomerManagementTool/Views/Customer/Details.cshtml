@@ -322,8 +322,6 @@
             $('#taskForm').submit(function (event) {
                 event.preventDefault();
 
-                // Here, you would use AJAX to submit the form data to the server
-                // For demonstration purpose, let's log the form data to the console
                 var formData = {
                     Id: $('#taskId').val(),
                     Description: $('#taskDescription').val(),
@@ -335,7 +333,7 @@
                 // Close modal
                 $('#taskModal').modal('hide');
 
-                // Reload task list
+                // Reloading Grid task list
                 loadTaskList();
             });
 
