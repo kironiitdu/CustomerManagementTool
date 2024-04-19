@@ -269,7 +269,7 @@
                         var taskListContainer = document.getElementById('taskListContainer');
                         taskListContainer.innerHTML = '';
 
-                        // Create HTML for each task and append it to the container
+                        // Creating HTML for each task and append it to the container
                         tasks.forEach(function (task) {
                             var taskItem = document.createElement('tr');
                             taskItem.innerHTML = '<td>' + task.description + '</td>' +
@@ -340,8 +340,6 @@
             // Function to delete task
             function deleteTask(taskId) {
                 if (confirm('Are you sure you want to delete this task?')) {
-                    // Here, you would use AJAX to delete the task from the server
-                    // For demonstration purpose, let's log the task ID to the console
                     console.log('Deleting task with ID: ' + taskId);
 
                     // Reload task list
