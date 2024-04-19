@@ -41,14 +41,14 @@ namespace CustomerManagementTool.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{taskId}")]
+        [HttpDelete]
         public async Task<ActionResult> DeleteTask(int customerId, int taskId)
         {
             var success = await _customerTaskService.DeleteTask(customerId, taskId);
             if (!success)
                 return NotFound();
 
-            return NoContent();
+            return Ok();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿@model Customer
 <div class="container">
-    <h1>Customer Details</h1>
+    <h3>Customer Details</h3>
 
     <div class="row">
         <div class="col-md-6">
@@ -12,42 +12,29 @@
         </div>
     </div>
 
-    <h2>Contacts</h2>
+    <h3>Contacts</h3>
 
     <div class="row">
         <div class="col-md-12">
             <button type="button" class="btn btn-primary" id="addContactBtn">Add Contact</button>
         </div>
     </div>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Contact Id</th>
+                <th>Contact Type</th>
+                <th>Contact Value</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="contactListContainer">
+            <!-- Contact list will be loaded dynamically here -->
+        </tbody>
+    </table>
+  
 
-    <div id="contactsSection">
-        <table class="table" id="contactsTable">
-            <thead>
-                <tr>
-                    <th>Contact Id</th>
-                    <th>Contact Type</th>
-                    <th>Contact Value</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var contact in Model.Contacts)
-                {
-                    <tr id="contact-@contact.Id">
-                        <td>@contact.Id</td>
-                        <td id="contactType">@contact.Type.ToString()</td>
-                        <td id ="contactValue">@contact.Value</td>
-                        <td>
-                            <button type="button" class="btn btn-info btn-sm editContactBtn" data-contact-id="@contact.Id">Edit</button>
-                            <button type="button" class="btn btn-danger btn-sm deleteContactBtn" data-contact-id="@contact.Id">Delete</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    <h2>Tasks</h2>
+    <h3>Tasks</h3>
 
     <!-- Task section -->
 
@@ -139,6 +126,127 @@
 </div>
 @section scripts {
     <script>
+
+        // Delete Contact Button Click
+
+        function deleteContact(contactId) {
+            var customerId = '@Model.Id';
+
+            if (confirm('Are you sure you want to delete this contact?')) {
+                $.ajax({
+                    url: '/Contact/DeleteContact',
+                    type: 'Delete',
+                    data: {
+                        customerId: customerId,
+                        contactId: contactId
+                    },
+                    success: function () {
+                        // Remove the contact row from the table
+                        fetchContactsList();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            }
+        }
+
+        //Delete Task Method
+        function deleteTask(taskId) {
+            var customerId = '@Model.Id';
+
+            if (confirm('Are you sure you want to delete this task?')) {
+                $.ajax({
+                    url: '/Task/DeleteTask',
+                    type: 'Delete',
+                    data: {
+                        customerId: customerId,
+                        taskId: taskId
+                    },
+                    success: function () {
+                        loadTaskList();
+                    },
+                    error: function (xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            }
+        }
+
+        //Loading contact by customer Id
+        function fetchContactsList() {
+            alert("loadTaskList");
+            var customerId = '@Model.Id';
+
+            fetch('/Contact/GetContactsByCustomerId?customerId=' + customerId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch contact list');
+                    }
+                    return response.json();
+                })
+                .then(contacts => {
+                    // Clear previous content
+                    var contactListContainer = document.getElementById('contactListContainer');
+                    contactListContainer.innerHTML = '';
+
+                    // Creating HTML for each contact and append it to the container
+                    contacts.forEach(function (contact) {
+                        console.log(contact);
+                        var contactItem = document.createElement('tr');
+                        contactItem.innerHTML = '<td>' + contact.id + '</td>' +
+                            '<td>' + (contact.type === 1 ? "Phone" : contact.type === 2 ? "Mail" : contact.type === 3 ? "Web" : "Unknown") + '</td>' +
+                            '<td>' + contact.value + '</td>' +
+                            '<td>' +
+                            '<button type="button" class="btn btn-sm btn-primary mr-1" onclick="openTaskModal(' + contact.id + ')">Edit</button>' +
+                            '<button style="margin-left:5px" type="button" class="btn btn-sm btn-danger" onClick ="deleteContact(\'' + contact.id + '\')">Delete</button>' +
+                            '</td>';
+                        contactListContainer.appendChild(contactItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to fetch contact list. Please try again.');
+                });
+        }
+
+
+        //Task Section Code
+
+        function loadTaskList() {
+            var customerId = '@Model.Id';
+
+            fetch('/Task/GetTasksByCustomerId?customerId=' + customerId)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch task list');
+                    }
+                    return response.json();
+                })
+                .then(tasks => {
+                    // Clear previous content
+                    var taskListContainer = document.getElementById('taskListContainer');
+                    taskListContainer.innerHTML = '';
+
+                    // Creating HTML for each task and append it to the container
+                    tasks.forEach(function (task) {
+                        var taskItem = document.createElement('tr');
+                        taskItem.innerHTML = '<td>' + task.description + '</td>' +
+                            '<td>' + task.creationDate + '</td>' +
+                            '<td>' + (task.solved ? 'Yes' : 'No') + '</td>' +
+                            '<td>' +
+                            '<button type="button" class="btn btn-sm btn-primary mr-1" onclick="openTaskModal(' + task.Id + ')">Edit</button>' +
+                            '<button style="margin-left:5px" type="button" class="btn btn-sm btn-danger" onclick="deleteTask(' + task.id + ')">Delete</button>' +
+                            '</td>';
+                        taskListContainer.appendChild(taskItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to fetch task list. Please try again.');
+                });
+        }
+        //Ready function
         $(document).ready(function () {
             // Add Contact Button Click
             $('#addContactBtn').click(function () {
@@ -191,31 +299,7 @@
                     }
                 });
             });
-
-            // Delete Contact Button Click
-            $('.deleteContactBtn').click(function () {
-                var contactId = $(this).data('contact-id');
-                var customerId = '@Model.Id';
-
-                if (confirm('Are you sure you want to delete this contact?')) {
-                    $.ajax({
-                        url: '/Contact/DeleteContact',
-                        type: 'POST',
-                        data: {
-                            customerId: customerId,
-                            contactId: contactId
-                        },
-                        success: function () {
-                            // Remove the contact row from the table
-                            location.reload();
-                        },
-                        error: function (xhr, status, error) {
-                            console.error(error);
-                        }
-                    });
-                }
-            });
-
+            
             //Open close modal
             $('.modal-header .close').click(function () {
                 $('#contactModal').modal('hide');
@@ -226,67 +310,9 @@
                 $('#contactModal').modal('hide');
             });
 
-            function fetchContacts(customerId) {
-                $.ajax({
-                    url: '/Contact/GetContactsByCustomerId',
-                    type: 'GET',
-                    data: { customerId: customerId },
-                    success: function (data) {
-                        $('#contactsTable tbody').empty();
-                        $.each(data, function (index, contact) {
-                            console.log(contact);
-                            var newRow = $('<tr id="contact-' + contact.Id + '">').append(
-                                $('<td>').text(contact.type),
-                                $('<td>').text(contact.value),
-                                $('<td>').append(
-                                    $('<button type="button" class="btn btn-info btn-sm editContactBtn">').attr('data-contact-id', contact.Id).text('Edit'),
-                                    $('<button type="button" class="btn btn-danger btn-sm deleteContactBtn">').attr('data-contact-id', contact.Id).text('Delete')
-                                )
-                            );
-                            $('#contactsTable tbody').append(newRow);
-                        });
-                    },
-                    error: function (xhr, status, error) {
-                        console.error(error);
-                    }
-                });
-            }
+            
 
-            //Task Section Code
-
-            function loadTaskList() {
-                var customerId = '@Model.Id';
-
-                fetch('/Task/GetTasksByCustomerId?customerId=' + customerId)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to fetch task list');
-                        }
-                        return response.json();
-                    })
-                    .then(tasks => {
-                        // Clear previous content
-                        var taskListContainer = document.getElementById('taskListContainer');
-                        taskListContainer.innerHTML = '';
-
-                        // Creating HTML for each task and append it to the container
-                        tasks.forEach(function (task) {
-                            var taskItem = document.createElement('tr');
-                            taskItem.innerHTML = '<td>' + task.description + '</td>' +
-                                '<td>' + task.creationDate + '</td>' +
-                                '<td>' + (task.solved ? 'Yes' : 'No') + '</td>' +
-                                '<td>' +
-                                '<button type="button" class="btn btn-sm btn-primary mr-1" onclick="openTaskModal(' + task.Id + ')">Edit</button>' +
-                                '<button style="margin-left:5px" type="button" class="btn btn-sm btn-danger" onclick="deleteTask(' + task.Id + ')">Delete</button>' +
-                                '</td>';
-                            taskListContainer.appendChild(taskItem);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Failed to fetch task list. Please try again.');
-                    });
-            }
+         
 
             // Function to open modal for adding/editing task
             function openTaskModal(taskId) {
@@ -337,15 +363,6 @@
                 loadTaskList();
             });
 
-            // Function to delete task
-            function deleteTask(taskId) {
-                if (confirm('Are you sure you want to delete this task?')) {
-                    console.log('Deleting task with ID: ' + taskId);
-
-                    // Reload task list
-                    loadTaskList();
-                }
-            }
             //Add task Modal
             $('#addTaskBtn').click(function () {
                 $('#taskModal').modal('show');
@@ -402,7 +419,8 @@
                     }
                 });
             });
-
+            //Load Contact and Task On load
+            fetchContactsList();
             loadTaskList();
         });
 

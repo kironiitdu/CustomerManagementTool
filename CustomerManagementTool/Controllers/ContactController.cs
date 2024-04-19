@@ -1,6 +1,7 @@
 ﻿using CustomerManagementTool.Models;
 using CustomerManagementTool.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace CustomerManagementTool.Controllers
 {
@@ -43,7 +44,7 @@ namespace CustomerManagementTool.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpDelete]
         public IActionResult DeleteContact(int customerId, int contactId)
         {
             try
@@ -61,7 +62,7 @@ namespace CustomerManagementTool.Controllers
         public IActionResult GetContactsByCustomerId(int customerId)
         {
             var contacts = _contactService.GetContactsByCustomerId(customerId);
-            return PartialView("_ContactList", _contactService.GetContactsByCustomerId(customerId));
+            return Ok(contacts);
         }
     }
 }
